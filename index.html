@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!--
+  Little Learners Hub — a free, open-source landing page for kids' games
+  License: MIT — do whatever you like with this, just keep the notice.
+  Copyright (c) 2026
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Little Learners — games</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;700;800&display=swap');
+
+  :root{
+    --sky:#BFE3F2;
+    --grass:#7CB268;
+    --sun:#F4C744;
+    --sun-deep:#D9A61E;
+    --coral:#F2836B;
+    --coral-deep:#D9603F;
+    --green:#3B9E4F;
+    --green-deep:#276E37;
+    --cream:#FFFBF2;
+    --ink:#3B2A4A;
+    --ink-soft:#6B5A7A;
+    --card:#FFFFFF;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    font-family:'Nunito', sans-serif;
+    background: linear-gradient(180deg, var(--sky) 0%, var(--sky) 40%, var(--grass) 40%, var(--grass) 100%);
+    min-height:100vh;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:24px 16px 60px;
+  }
+
+  .wrap{ width:100%; max-width:680px; }
+
+  .sun{
+    width:56px; height:56px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #FFE9A8, var(--sun) 60%, var(--sun-deep));
+    margin:0 auto 8px;
+    box-shadow: 0 0 0 6px rgba(244,199,68,0.25);
+  }
+
+  h1{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:clamp(28px, 6vw, 42px);
+    text-align:center;
+    margin:6px 0 2px;
+    text-shadow: 2px 2px 0 rgba(255,255,255,0.5);
+  }
+
+  .subtitle{
+    text-align:center;
+    font-size:15px;
+    color:var(--ink-soft);
+    margin:0 0 26px;
+    font-weight:700;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap:18px;
+  }
+
+  .game-card{
+    background:var(--card);
+    border-radius:24px;
+    padding:22px 20px;
+    text-decoration:none;
+    color:var(--ink);
+    display:block;
+    box-shadow: 0 8px 0 rgba(59,42,74,0.08), 0 4px 16px rgba(59,42,74,0.10);
+    transition: transform 0.15s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .game-card:hover{ transform: translateY(-4px); }
+  .game-card:active{ transform: translateY(-1px); }
+
+  .game-card::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:6px;
+  }
+  .card-bloom::before{ background: repeating-linear-gradient(90deg, var(--coral) 0 18px, var(--sun) 18px 36px, var(--grass) 36px 54px); }
+  .card-dash::before{ background: repeating-linear-gradient(90deg, var(--green) 0 18px, #E24B4A 18px 36px); }
+
+  .game-icon{
+    font-size:40px;
+    margin-bottom:10px;
+    display:block;
+  }
+
+  .game-title{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:20px;
+    margin:0 0 6px;
+  }
+
+  .game-desc{
+    font-size:14px;
+    color:var(--ink-soft);
+    margin:0 0 14px;
+    line-height:1.5;
+  }
+
+  .game-tag{
+    display:inline-block;
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:12px;
+    padding:5px 12px;
+    border-radius:999px;
+    background: var(--cream);
+    color: var(--ink-soft);
+    border: 2px solid #EFE6D8;
+  }
+
+  .footer-note{
+    text-align:center;
+    font-size:12px;
+    color:rgba(59,42,74,0.6);
+    margin-top:28px;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sun"></div>
+  <h1>Little Learners</h1>
+  <p class="subtitle">Pick a game to play!</p>
+
+  <div class="grid">
+    <a class="game-card card-bloom" href="bloom-and-count.html">
+      <span class="game-icon">🌸</span>
+      <p class="game-title">Bloom &amp; Count</p>
+      <p class="game-desc">Count garden friends and solve simple addition among the flowers.</p>
+      <span class="game-tag">Counting &amp; addition</span>
+    </a>
+
+    <a class="game-card card-dash" href="green-light-dash.html">
+      <span class="game-icon">🏃</span>
+      <p class="game-title">Green Light Dash</p>
+      <p class="game-desc">Step on green, freeze on red, and race to the finish flag.</p>
+      <span class="game-tag">Reflexes &amp; focus</span>
+    </a>
+  </div>
+
+  <p class="footer-note">
+    Free and open source — MIT licensed. Built for early learners.<br>
+    Feel free to copy, remix, and host this anywhere.
+  </p>
+</div>
+</body>
+</html>

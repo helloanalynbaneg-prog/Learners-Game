@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<!--
+  Word Wizard — a free, open-source word-guessing game for kids
+  Inspired by the classic letter-guessing game format, reskinned with a friendly
+  balloon theme (no gallows imagery) and extra twists: categories, hints, streaks.
+  License: MIT — do whatever you like with this, just keep the notice.
+  Copyright (c) 2026
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Wizard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;700;800&display=swap');
+
+  :root{
+    --teal:#BFE8E0;
+    --teal-deep:#5FBCA9;
+    --purple:#8A6FD6;
+    --purple-deep:#5F49A8;
+    --sun:#F4C744;
+    --sun-deep:#D9A61E;
+    --coral:#F2836B;
+    --coral-deep:#D9603F;
+    --cream:#FFFBF2;
+    --ink:#2E2A45;
+    --ink-soft:#655F7E;
+    --card:#FFFFFF;
+    --danger:#E24B4A;
+    --danger-deep:#A32D2D;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    font-family:'Nunito', sans-serif;
+    background: linear-gradient(180deg, var(--teal) 0%, var(--purple) 140%);
+    min-height:100vh;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:24px 16px 60px;
+  }
+
+  .wrap{ width:100%; max-width:600px; }
+
+  h1{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:clamp(28px, 6vw, 38px);
+    text-align:center;
+    margin:6px 0 2px;
+    color:var(--purple-deep);
+  }
+
+  .subtitle{
+    text-align:center;
+    font-size:14px;
+    color:var(--ink-soft);
+    margin:0 0 18px;
+    font-weight:700;
+  }
+
+  .card{
+    background:var(--card);
+    border-radius:26px;
+    padding:22px 20px 24px;
+    box-shadow: 0 10px 0 rgba(46,42,69,0.08), 0 4px 20px rgba(46,42,69,0.14);
+  }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  .cat-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap:12px;
+    margin-top:6px;
+  }
+
+  .cat-btn{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:16px;
+    padding:18px 10px;
+    border-radius:18px;
+    border: 3px solid #EDE8FA;
+    background: var(--cream);
+    color: var(--ink);
+    cursor:pointer;
+    text-align:center;
+  }
+  .cat-btn:hover{ border-color: var(--purple); }
+  .cat-icon{ font-size:28px; display:block; margin-bottom:6px; }
+
+  .top-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:16px;
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .pill{
+    background: #F1ECFB;
+    padding:6px 12px;
+    border-radius:999px;
+  }
+
+  .balloon-row{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-bottom:18px;
+    min-height:44px;
+  }
+  .balloon{
+    font-size:30px;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .balloon.popped{
+    opacity:0.15;
+    transform: scale(0.6) translateY(6px);
+  }
+
+  .word-display{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .letter-slot{
+    width:32px;
+    height:38px;
+    border-bottom: 4px solid var(--purple);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:22px;
+    text-transform:uppercase;
+  }
+
+  .hint-box{
+    text-align:center;
+    font-size:13px;
+    color:var(--ink-soft);
+    min-height:20px;
+    margin-bottom:16px;
+    font-style:italic;
+  }
+
+  .keyboard{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    align-items:center;
+  }
+  .key-row{ display:flex; gap:5px; }
+  .key-btn{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    width:30px;
+    height:36px;
+    border-radius:8px;
+    border: 2px solid #EDE8FA;
+    background: var(--cream);
+    color: var(--ink);
+    cursor:pointer;
+  }
+  .key-btn:hover:not(:disabled){ border-color: var(--purple); }
+  .key-btn:disabled{ opacity:0.35; cursor:default; }
+  .key-btn.correct{ background:#DCF3E6; border-color: var(--teal-deep); color:#1F6B54; }
+  .key-btn.wrong{ background:#FBE4DE; border-color: var(--coral-deep); color: var(--coral-deep); }
+
+  .bottom-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+
+  .primary-btn{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    padding:12px 24px;
+    border-radius:999px;
+    border:none;
+    background: var(--purple);
+    color:white;
+    cursor:pointer;
+    box-shadow: 0 4px 0 var(--purple-deep);
+  }
+  .primary-btn:active{ transform: translateY(3px); box-shadow:none; }
+
+  .ghost-btn{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:11px 20px;
+    border-radius:999px;
+    border: 2px solid #EDE8FA;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor:pointer;
+  }
+  .ghost-btn:disabled{ opacity:0.4; cursor:default; }
+
+  .status-banner{
+    text-align:center;
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:18px;
+    min-height:26px;
+    margin-bottom:6px;
+    color: var(--teal-deep);
+  }
+  .status-banner.lose{ color: var(--danger-deep); }
+
+  .footer-note{
+    text-align:center;
+    font-size:12px;
+    color:rgba(255,255,255,0.85);
+    margin-top:18px;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🪄 Word Wizard</h1>
+  <p class="subtitle">Guess the word before all the balloons pop!</p>
+
+  <div class="card">
+
+    <div class="screen active" id="categoryScreen">
+      <div class="top-row">
+        <span class="pill">Streak: <span id="streakDisplay">0</span></span>
+        <span class="pill">Words solved: <span id="solvedDisplay">0</span></span>
+      </div>
+      <div class="cat-grid" id="catGrid"></div>
+    </div>
+
+    <div class="screen" id="gameScreen">
+      <div class="top-row">
+        <span class="pill" id="catPill">Category</span>
+        <span class="pill">Streak: <span id="streakDisplay2">0</span></span>
+        <span class="pill">Words solved: <span id="solvedDisplay2">0</span></span>
+      </div>
+
+      <div class="balloon-row" id="balloonRow"></div>
+
+      <div class="status-banner" id="statusBanner"></div>
+
+      <div class="word-display" id="wordDisplay"></div>
+
+      <div class="hint-box" id="hintBox"></div>
+
+      <div class="keyboard" id="keyboard"></div>
+
+      <div class="bottom-row">
+        <button class="ghost-btn" id="hintBtn">Show a hint</button>
+        <button class="primary-btn" id="nextWordBtn" style="visibility:hidden;">Next word →</button>
+        <button class="ghost-btn" id="backBtn">Change category</button>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer-note">
+    Free and open source — MIT licensed. A word-guessing game inspired by the classic<br>
+    letter-guessing format, reskinned with balloons. Feel free to copy, remix, and host this anywhere.
+  </p>
+</div>
+
+<script>
+  const WORD_BANK = {
+    animals: {
+      icon: '🐾',
+      words: [
+        { word: 'ELEPHANT', hint: 'A huge animal with a long trunk.' },
+        { word: 'GIRAFFE', hint: 'The tallest animal, with a very long neck.' },
+        { word: 'PENGUIN', hint: 'A bird that swims but cannot fly.' },
+        { word: 'RABBIT', hint: 'A furry animal that hops and loves carrots.' },
+        { word: 'DOLPHIN', hint: 'A smart, playful animal that lives in the ocean.' },
+        { word: 'TURTLE', hint: 'A slow animal that carries its home on its back.' }
+      ]
+    },
+    food: {
+      icon: '🍎',
+      words: [
+        { word: 'BANANA', hint: 'A long yellow fruit monkeys love.' },
+        { word: 'PIZZA', hint: 'A round, cheesy food with lots of toppings.' },
+        { word: 'CARROT', hint: 'An orange vegetable rabbits enjoy.' },
+        { word: 'PANCAKE', hint: 'A flat, round breakfast food with syrup.' },
+        { word: 'popcorn'.toUpperCase(), hint: 'A crunchy snack that pops at the movies.' },
+        { word: 'WATERMELON', hint: 'A big green fruit that is pink and juicy inside.' }
+      ]
+    },
+    colors: {
+      icon: '🎨',
+      words: [
+        { word: 'PURPLE', hint: 'A color made by mixing red and blue.' },
+        { word: 'ORANGE', hint: 'A color named after a fruit.' },
+        { word: 'YELLOW', hint: 'The color of the sun.' },
+        { word: 'GREEN', hint: 'The color of grass and leaves.' },
+        { word: 'SILVER', hint: 'A shiny, metallic grayish color.' },
+        { word: 'MAGENTA', hint: 'A bright pinkish-purple color.' }
+      ]
+    },
+    shapes: {
+      icon: '🔺',
+      words: [
+        { word: 'TRIANGLE', hint: 'A shape with three sides.' },
+        { word: 'CIRCLE', hint: 'A perfectly round shape with no corners.' },
+        { word: 'SQUARE', hint: 'A shape with four equal sides.' },
+        { word: 'OCTAGON', hint: 'A shape with eight sides, like a stop sign.' },
+        { word: 'DIAMOND', hint: 'A shape like a tilted square, seen on playing cards.' },
+        { word: 'HEXAGON', hint: 'A shape with six sides, like a honeycomb cell.' }
+      ]
+    }
+  };
+
+  const MAX_BALLOONS = 6;
+  const BALLOON_EMOJI = ['🎈','🎈','🎈','🎈','🎈','🎈'];
+
+  const categoryScreen = document.getElementById('categoryScreen');
+  const gameScreen = document.getElementById('gameScreen');
+  const catGrid = document.getElementById('catGrid');
+  const catPill = document.getElementById('catPill');
+  const balloonRow = document.getElementById('balloonRow');
+  const wordDisplay = document.getElementById('wordDisplay');
+  const hintBox = document.getElementById('hintBox');
+  const hintBtn = document.getElementById('hintBtn');
+  const keyboard = document.getElementById('keyboard');
+  const nextWordBtn = document.getElementById('nextWordBtn');
+  const backBtn = document.getElementById('backBtn');
+  const statusBanner = document.getElementById('statusBanner');
+  const streakDisplay = document.getElementById('streakDisplay');
+  const streakDisplay2 = document.getElementById('streakDisplay2');
+  const solvedDisplay = document.getElementById('solvedDisplay');
+  const solvedDisplay2 = document.getElementById('solvedDisplay2');
+
+  let streak = 0;
+  let solved = 0;
+  let currentCategory = null;
+  let currentWord = '';
+  let currentHint = '';
+  let guessed = new Set();
+  let wrongCount = 0;
+  let gameActive = false;
+  let usedWords = {};
+
+  function buildCategoryGrid(){
+    catGrid.innerHTML = '';
+    Object.keys(WORD_BANK).forEach(key => {
+      const cat = WORD_BANK[key];
+      const btn = document.createElement('button');
+      btn.className = 'cat-btn';
+      btn.innerHTML = '<span class="cat-icon">' + cat.icon + '</span>' + key.charAt(0).toUpperCase() + key.slice(1);
+      btn.addEventListener('click', () => startCategory(key));
+      catGrid.appendChild(btn);
+    });
+  }
+
+  function buildKeyboard(){
+    const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+    keyboard.innerHTML = '';
+    rows.forEach(row => {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'key-row';
+      row.split('').forEach(letter => {
+        const btn = document.createElement('button');
+        btn.className = 'key-btn';
+        btn.textContent = letter;
+        btn.dataset.letter = letter;
+        btn.addEventListener('click', () => guessLetter(letter));
+        rowEl.appendChild(btn);
+      });
+      keyboard.appendChild(rowEl);
+    });
+  }
+
+  function pickWord(categoryKey){
+    const list = WORD_BANK[categoryKey].words;
+    if(!usedWords[categoryKey]) usedWords[categoryKey] = new Set();
+    const used = usedWords[categoryKey];
+    let available = list.filter(w => !used.has(w.word));
+    if(available.length === 0){
+      used.clear();
+      available = list;
+    }
+    const pick = available[Math.floor(Math.random() * available.length)];
+    used.add(pick.word);
+    return pick;
+  }
+
+  function startCategory(categoryKey){
+    currentCategory = categoryKey;
+    categoryScreen.classList.remove('active');
+    gameScreen.classList.add('active');
+    catPill.textContent = WORD_BANK[categoryKey].icon + ' ' + categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
+    startNewWord();
+  }
+
+  function startNewWord(){
+    const pick = pickWord(currentCategory);
+    currentWord = pick.word;
+    currentHint = pick.hint;
+    guessed = new Set();
+    wrongCount = 0;
+    gameActive = true;
+    hintBox.textContent = '';
+    statusBanner.textContent = '';
+    statusBanner.classList.remove('lose');
+    nextWordBtn.style.visibility = 'hidden';
+    hintBtn.disabled = false;
+
+    renderBalloons();
+    renderWord();
+    buildKeyboard();
+    updateStreakDisplays();
+  }
+
+  function renderBalloons(){
+    balloonRow.innerHTML = '';
+    for(let i = 0; i < MAX_BALLOONS; i++){
+      const span = document.createElement('span');
+      span.className = 'balloon' + (i < wrongCount ? ' popped' : '');
+      span.textContent = BALLOON_EMOJI[i];
+      balloonRow.appendChild(span);
+    }
+  }
+
+  function renderWord(){
+    wordDisplay.innerHTML = '';
+    currentWord.split('').forEach(letter => {
+      const slot = document.createElement('div');
+      slot.className = 'letter-slot';
+      slot.textContent = guessed.has(letter) ? letter : '';
+      wordDisplay.appendChild(slot);
+    });
+  }
+
+  function updateStreakDisplays(){
+    streakDisplay.textContent = streak;
+    streakDisplay2.textContent = streak;
+    solvedDisplay.textContent = solved;
+    solvedDisplay2.textContent = solved;
+  }
+
+  function guessLetter(letter){
+    if(!gameActive || guessed.has(letter)) return;
+    guessed.add(letter);
+
+    const keyBtn = keyboard.querySelector('[data-letter="' + letter + '"]');
+    keyBtn.disabled = true;
+
+    if(currentWord.includes(letter)){
+      keyBtn.classList.add('correct');
+      renderWord();
+      const solvedNow = currentWord.split('').every(l => guessed.has(l));
+      if(solvedNow) winWord();
+    } else {
+      keyBtn.classList.add('wrong');
+      wrongCount += 1;
+      renderBalloons();
+      if(wrongCount >= MAX_BALLOONS) loseWord();
+    }
+  }
+
+  function winWord(){
+    gameActive = false;
+    streak += 1;
+    solved += 1;
+    updateStreakDisplays();
+    statusBanner.textContent = 'You solved it! ' + pickCelebration();
+    statusBanner.classList.remove('lose');
+    nextWordBtn.style.visibility = 'visible';
+    hintBtn.disabled = true;
+    disableAllKeys();
+  }
+
+  function loseWord(){
+    gameActive = false;
+    streak = 0;
+    updateStreakDisplays();
+    statusBanner.textContent = 'All out of balloons! The word was ' + currentWord + '.';
+    statusBanner.classList.add('lose');
+    nextWordBtn.style.visibility = 'visible';
+    hintBtn.disabled = true;
+    disableAllKeys();
+    renderWord_full();
+  }
+
+  function renderWord_full(){
+    wordDisplay.innerHTML = '';
+    currentWord.split('').forEach(letter => {
+      const slot = document.createElement('div');
+      slot.className = 'letter-slot';
+      slot.textContent = letter;
+      wordDisplay.appendChild(slot);
+    });
+  }
+
+  function disableAllKeys(){
+    keyboard.querySelectorAll('.key-btn').forEach(btn => btn.disabled = true);
+  }
+
+  function pickCelebration(){
+    const lines = ['Great guessing!', 'Wizard-level skills!', 'Nailed it!', 'You are magical!'];
+    return lines[Math.floor(Math.random() * lines.length)];
+  }
+
+  hintBtn.addEventListener('click', () => {
+    hintBox.textContent = '💡 ' + currentHint;
+    hintBtn.disabled = true;
+  });
+
+  nextWordBtn.addEventListener('click', startNewWord);
+
+  backBtn.addEventListener('click', () => {
+    gameScreen.classList.remove('active');
+    categoryScreen.classList.add('active');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if(!gameActive) return;
+    const letter = e.key.toUpperCase();
+    if(letter.length === 1 && letter >= 'A' && letter <= 'Z'){
+      guessLetter(letter);
+    }
+  });
+
+  buildCategoryGrid();
+</script>
+</body>
+</html>

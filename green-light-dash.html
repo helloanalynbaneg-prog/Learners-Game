@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<!--
+  Green Light Dash — a free, open-source reflex game for kids
+  Inspired by the classic playground game "Red Light, Green Light"
+  (a traditional game, not affiliated with or depicting any copyrighted show, character, or brand).
+  License: MIT — do whatever you like with this, just keep the notice.
+  Copyright (c) 2026
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Green Light Dash — a reflex game</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;700;800&display=swap');
+
+  :root{
+    --field:#8FC96B;
+    --field-deep:#6DA84A;
+    --sky:#FFF7E6;
+    --red:#E24B4A;
+    --red-deep:#A32D2D;
+    --green:#3B9E4F;
+    --green-deep:#276E37;
+    --ink:#2C3B2A;
+    --ink-soft:#5A6B57;
+    --card:#FFFFFF;
+    --sun:#F4C744;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    font-family:'Nunito', sans-serif;
+    background: var(--sky);
+    min-height:100vh;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:24px 16px 60px;
+  }
+
+  .wrap{ width:100%; max-width:640px; }
+
+  h1{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:clamp(28px, 6vw, 38px);
+    text-align:center;
+    margin:6px 0 2px;
+  }
+
+  .subtitle{
+    text-align:center;
+    font-size:15px;
+    color:var(--ink-soft);
+    margin:0 0 20px;
+    font-weight:700;
+  }
+
+  .card{
+    background:var(--card);
+    border-radius:28px;
+    padding:24px 20px 26px;
+    box-shadow: 0 10px 0 rgba(44,59,42,0.08), 0 4px 20px rgba(44,59,42,0.12);
+  }
+
+  .stat-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    color:var(--ink-soft);
+  }
+
+  .light-box{
+    display:flex;
+    justify-content:center;
+    margin-bottom:8px;
+  }
+
+  .signal{
+    width:64px;
+    height:96px;
+    background:#3D3D3D;
+    border-radius:14px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:space-evenly;
+    padding:10px 0;
+  }
+
+  .bulb{
+    width:34px; height:34px;
+    border-radius:50%;
+    background:#5a5a5a;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .bulb.red-on{
+    background: var(--red);
+    box-shadow: 0 0 18px 4px rgba(226,75,74,0.7);
+  }
+  .bulb.green-on{
+    background: var(--green);
+    box-shadow: 0 0 18px 4px rgba(59,158,79,0.7);
+  }
+
+  .status-text{
+    text-align:center;
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:22px;
+    margin: 10px 0 18px;
+    min-height:30px;
+  }
+  .status-text.red-txt{ color:var(--red-deep); }
+  .status-text.green-txt{ color:var(--green-deep); }
+
+  .track{
+    position:relative;
+    height:70px;
+    background: linear-gradient(180deg, var(--field), var(--field-deep));
+    border-radius:16px;
+    margin-bottom:20px;
+    overflow:hidden;
+  }
+  .track::before{
+    content:"";
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,0.15) 0 3px, transparent 3px 26px);
+  }
+  .finish-flag{
+    position:absolute;
+    right:10px; top:50%;
+    transform: translateY(-50%);
+    font-size:30px;
+  }
+  .runner{
+    position:absolute;
+    left:6px; top:50%;
+    transform: translateY(-50%);
+    font-size:32px;
+    transition: left 0.35s ease;
+  }
+
+  .step-btn{
+    display:block;
+    width:100%;
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:20px;
+    padding:18px;
+    border-radius:18px;
+    border:none;
+    background: var(--green);
+    color:white;
+    cursor:pointer;
+    box-shadow: 0 5px 0 var(--green-deep);
+    transition: transform 0.08s ease;
+  }
+  .step-btn:active{ transform: translateY(4px); box-shadow: 0 1px 0 var(--green-deep); }
+  .step-btn:disabled{ opacity:0.6; cursor:default; }
+
+  .feedback{
+    text-align:center;
+    min-height:26px;
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:16px;
+    margin-top:14px;
+    color:var(--ink-soft);
+  }
+
+  .restart-row{
+    display:flex; justify-content:center; margin-top:10px;
+  }
+  .restart-btn{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 2px solid #E4E0D4;
+    padding:8px 18px;
+    border-radius:999px;
+    cursor:pointer;
+    visibility:hidden;
+  }
+  .restart-btn.show{ visibility:visible; }
+
+  .footer-note{
+    text-align:center;
+    font-size:12px;
+    color:rgba(44,59,42,0.55);
+    margin-top:18px;
+    line-height:1.6;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .runner{ transition:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Green Light Dash</h1>
+  <p class="subtitle">Step on green. Freeze on red. Race to the flag!</p>
+
+  <div class="card">
+    <div class="stat-row">
+      <span>Best crossing: <span id="best">–</span></span>
+      <span>Attempts: <span id="attempts">0</span></span>
+    </div>
+
+    <div class="light-box">
+      <div class="signal">
+        <div class="bulb" id="bulbRed"></div>
+        <div class="bulb" id="bulbGreen"></div>
+      </div>
+    </div>
+
+    <div class="status-text" id="statusText">Get ready…</div>
+
+    <div class="track">
+      <span class="finish-flag">🏁</span>
+      <span class="runner" id="runner">🏃</span>
+    </div>
+
+    <button class="step-btn" id="stepBtn" disabled>Tap to step!</button>
+    <div class="feedback" id="feedback"></div>
+
+    <div class="restart-row">
+      <button class="restart-btn" id="restartBtn">Play again</button>
+    </div>
+  </div>
+
+  <p class="footer-note">
+    Free and open source — MIT licensed. An original reflex game inspired by the traditional<br>
+    playground game "Red Light, Green Light." Great for practicing focus and quick reactions.
+  </p>
+</div>
+
+<script>
+  const runner = document.getElementById('runner');
+  const stepBtn = document.getElementById('stepBtn');
+  const statusText = document.getElementById('statusText');
+  const feedback = document.getElementById('feedback');
+  const bulbRed = document.getElementById('bulbRed');
+  const bulbGreen = document.getElementById('bulbGreen');
+  const attemptsEl = document.getElementById('attempts');
+  const bestEl = document.getElementById('best');
+  const restartBtn = document.getElementById('restartBtn');
+
+  const TRACK_START = 6;
+  const TRACK_END_PCT = 88;
+  const STEPS_TO_WIN = 10;
+
+  let isGreen = false;
+  let progress = 0;
+  let attempts = 0;
+  let bestSteps = null;
+  let gameOver = false;
+  let switchTimer = null;
+
+  function setLight(green){
+    isGreen = green;
+    bulbGreen.classList.toggle('green-on', green);
+    bulbRed.classList.toggle('red-on', !green);
+    statusText.textContent = green ? 'GREEN — step now!' : 'RED — freeze!';
+    statusText.className = 'status-text ' + (green ? 'green-txt' : 'red-txt');
+  }
+
+  function scheduleSwitch(){
+    const delay = isGreen ? randInt(700, 1600) : randInt(900, 2200);
+    switchTimer = setTimeout(() => {
+      setLight(!isGreen);
+      scheduleSwitch();
+    }, delay);
+  }
+
+  function randInt(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function updateRunnerPosition(){
+    const pct = TRACK_START + (progress / STEPS_TO_WIN) * (TRACK_END_PCT - TRACK_START);
+    runner.style.left = pct + '%';
+  }
+
+  function startRound(){
+    gameOver = false;
+    progress = 0;
+    updateRunnerPosition();
+    feedback.textContent = '';
+    stepBtn.disabled = false;
+    stepBtn.textContent = 'Tap to step!';
+    restartBtn.classList.remove('show');
+    setLight(Math.random() > 0.5);
+    scheduleSwitch();
+  }
+
+  function endRound(won){
+    gameOver = true;
+    clearTimeout(switchTimer);
+    stepBtn.disabled = true;
+    restartBtn.classList.add('show');
+    attempts += 1;
+    attemptsEl.textContent = attempts;
+
+    if(won){
+      statusText.textContent = 'You made it! 🎉';
+      statusText.className = 'status-text green-txt';
+      feedback.textContent = 'Great focus — you crossed the finish line!';
+      if(bestSteps === null || attempts <= bestSteps){
+        bestSteps = attempts;
+        bestEl.textContent = attempts;
+      }
+    } else {
+      statusText.textContent = 'Caught moving on red!';
+      statusText.className = 'status-text red-txt';
+      feedback.textContent = 'So close — try again and watch that light.';
+    }
+  }
+
+  stepBtn.addEventListener('click', () => {
+    if(gameOver) return;
+    if(isGreen){
+      progress += 1;
+      updateRunnerPosition();
+      if(progress >= STEPS_TO_WIN){
+        endRound(true);
+      }
+    } else {
+      endRound(false);
+    }
+  });
+
+  restartBtn.addEventListener('click', startRound);
+
+  startRound();
+</script>
+</body>
+</html>

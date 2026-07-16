@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<!--
+  Bloom & Count — a free, open-source counting & addition game for kids
+  License: MIT — do whatever you like with this, just keep the notice.
+  Copyright (c) 2026
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom & Count — a garden counting game</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;700;800&display=swap');
+
+  :root{
+    --sky:#BFE3F2;
+    --sky-deep:#8FCBE3;
+    --grass:#7CB268;
+    --grass-deep:#5C9048;
+    --sun:#F4C744;
+    --sun-deep:#D9A61E;
+    --coral:#F2836B;
+    --coral-deep:#D9603F;
+    --cream:#FFFBF2;
+    --ink:#3B2A4A;
+    --ink-soft:#6B5A7A;
+    --card:#FFFFFF;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    font-family:'Nunito', sans-serif;
+    background: linear-gradient(180deg, var(--sky) 0%, var(--sky) 55%, var(--grass) 55%, var(--grass) 100%);
+    min-height:100vh;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:24px 16px 60px;
+  }
+
+  .wrap{ width:100%; max-width:640px; }
+
+  h1{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:clamp(28px, 6vw, 40px);
+    color:var(--ink);
+    text-align:center;
+    margin:6px 0 2px;
+    text-shadow: 2px 2px 0 rgba(255,255,255,0.5);
+  }
+
+  .subtitle{
+    text-align:center;
+    font-size:15px;
+    color:var(--ink-soft);
+    margin:0 0 20px;
+    font-weight:700;
+  }
+
+  .sun{
+    width:56px; height:56px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #FFE9A8, var(--sun) 60%, var(--sun-deep));
+    margin:0 auto 8px;
+    box-shadow: 0 0 0 6px rgba(244,199,68,0.25);
+  }
+
+  .card{
+    background:var(--card);
+    border-radius:28px;
+    padding:28px 22px 24px;
+    box-shadow: 0 10px 0 rgba(59,42,74,0.08), 0 4px 20px rgba(59,42,74,0.12);
+    position:relative;
+    overflow:hidden;
+  }
+
+  .card::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:8px;
+    background: repeating-linear-gradient(90deg, var(--coral) 0 24px, var(--sun) 24px 48px, var(--grass) 48px 72px);
+  }
+
+  .meter-row{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:18px; gap:12px; flex-wrap:wrap;
+  }
+
+  .score-pill{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    background: var(--sun);
+    color:#5A3E0A;
+    padding:8px 16px;
+    border-radius:999px;
+    font-size:15px;
+  }
+
+  .garden-meter{
+    flex:1;
+    min-width:140px;
+    height:18px;
+    background:#EFEAE0;
+    border-radius:999px;
+    overflow:hidden;
+    position:relative;
+  }
+  .garden-meter-fill{
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg, var(--grass-deep), var(--grass));
+    border-radius:999px;
+    transition: width 0.6s cubic-bezier(.4,1.6,.4,1);
+  }
+
+  .question-box{
+    text-align:center;
+    margin: 10px 0 22px;
+  }
+
+  .prompt{
+    font-size:17px;
+    font-weight:800;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+
+  .scene{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px;
+    min-height:70px;
+    align-items:center;
+    margin-bottom:6px;
+  }
+
+  .critter{
+    font-size:34px;
+    animation: pop 0.35s ease backwards;
+  }
+  @keyframes pop{
+    from{ transform:scale(0); }
+    to{ transform:scale(1); }
+  }
+
+  .plus-sign{
+    font-family:'Fredoka', sans-serif;
+    font-size:30px;
+    font-weight:700;
+    color:var(--coral);
+    align-self:center;
+    margin: 0 2px;
+  }
+
+  .answers{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap:12px;
+    margin-top:8px;
+  }
+
+  .answer-btn{
+    font-family:'Fredoka', sans-serif;
+    font-size:22px;
+    font-weight:600;
+    padding:16px 8px;
+    border-radius:18px;
+    border: none;
+    background: var(--cream);
+    color:var(--ink);
+    cursor:pointer;
+    border: 3px solid #EFE6D8;
+    transition: transform 0.12s ease, background 0.2s ease, border-color 0.2s ease;
+  }
+  .answer-btn:hover{ transform: translateY(-3px); border-color: var(--sun); }
+  .answer-btn:active{ transform: translateY(0px) scale(0.97); }
+  .answer-btn.correct{
+    background: #E4F3DC;
+    border-color: var(--grass-deep);
+    color: var(--grass-deep);
+  }
+  .answer-btn.wrong{
+    background: #FBE4DE;
+    border-color: var(--coral-deep);
+    color: var(--coral-deep);
+  }
+
+  .feedback{
+    text-align:center;
+    min-height:28px;
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:17px;
+    margin-top:14px;
+    color:var(--grass-deep);
+  }
+
+  .controls-row{
+    display:flex;
+    justify-content:center;
+    margin-top:14px;
+  }
+
+  .next-btn{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:16px;
+    background: var(--coral);
+    color:white;
+    border:none;
+    padding:12px 28px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow: 0 4px 0 var(--coral-deep);
+    transition: transform 0.1s ease;
+    visibility:hidden;
+  }
+  .next-btn:active{ transform: translateY(3px); box-shadow: 0 1px 0 var(--coral-deep); }
+  .next-btn.show{ visibility:visible; }
+
+  .footer-note{
+    text-align:center;
+    font-size:12px;
+    color:rgba(59,42,74,0.55);
+    margin-top:18px;
+    line-height:1.6;
+  }
+  .footer-note a{ color:var(--ink-soft); }
+
+  @media (prefers-reduced-motion: reduce){
+    .critter{ animation:none; }
+    .answer-btn, .garden-meter-fill{ transition:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sun"></div>
+  <h1>Bloom &amp; Count</h1>
+  <p class="subtitle">Count the garden friends and pick the right number!</p>
+
+  <div class="card">
+    <div class="meter-row">
+      <div class="score-pill">Score: <span id="score">0</span></div>
+      <div class="garden-meter"><div class="garden-meter-fill" id="meterFill"></div></div>
+    </div>
+
+    <div class="question-box">
+      <div class="prompt" id="prompt">How many friends are in the garden?</div>
+      <div class="scene" id="scene"></div>
+    </div>
+
+    <div class="answers" id="answers"></div>
+
+    <div class="feedback" id="feedback"></div>
+    <div class="controls-row">
+      <button class="next-btn" id="nextBtn">Next flower →</button>
+    </div>
+  </div>
+
+  <p class="footer-note">
+    Free and open source — MIT licensed. Built for early counting and simple addition (ages 4–7).<br>
+    Feel free to copy, remix, and host this anywhere.
+  </p>
+</div>
+
+<script>
+  const CRITTERS = ['🐞','🦋','🐝','🌸','🍄','🐌'];
+  let score = 0;
+  let level = 1; // 1 = counting only, 2+ = simple addition
+  let currentAnswer = 0;
+  let answered = false;
+
+  const sceneEl = document.getElementById('scene');
+  const answersEl = document.getElementById('answers');
+  const promptEl = document.getElementById('prompt');
+  const feedbackEl = document.getElementById('feedback');
+  const scoreEl = document.getElementById('score');
+  const meterFill = document.getElementById('meterFill');
+  const nextBtn = document.getElementById('nextBtn');
+
+  function randInt(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function pickCritter(){
+    return CRITTERS[randInt(0, CRITTERS.length - 1)];
+  }
+
+  function renderCritters(container, count, critter, delayOffset){
+    for(let i = 0; i < count; i++){
+      const span = document.createElement('span');
+      span.className = 'critter';
+      span.textContent = critter;
+      span.style.animationDelay = ((delayOffset + i) * 0.06) + 's';
+      container.appendChild(span);
+    }
+  }
+
+  function newQuestion(){
+    answered = false;
+    feedbackEl.textContent = '';
+    nextBtn.classList.remove('show');
+    sceneEl.innerHTML = '';
+    answersEl.innerHTML = '';
+
+    const useAddition = level >= 2 && Math.random() > 0.35;
+
+    if(useAddition){
+      const a = randInt(1, 5);
+      const b = randInt(1, 4);
+      currentAnswer = a + b;
+      promptEl.textContent = 'How many friends in total?';
+      const critterA = pickCritter();
+      const critterB = pickCritter();
+      renderCritters(sceneEl, a, critterA, 0);
+      const plus = document.createElement('span');
+      plus.className = 'plus-sign';
+      plus.textContent = '+';
+      sceneEl.appendChild(plus);
+      renderCritters(sceneEl, b, critterB, a);
+    } else {
+      const count = randInt(2, 9);
+      currentAnswer = count;
+      promptEl.textContent = 'How many friends are in the garden?';
+      renderCritters(sceneEl, count, pickCritter(), 0);
+    }
+
+    const options = new Set([currentAnswer]);
+    while(options.size < 4){
+      const offset = randInt(-3, 3);
+      const candidate = currentAnswer + offset;
+      if(candidate >= 0 && candidate <= 12) options.add(candidate);
+    }
+    const shuffled = Array.from(options).sort(() => Math.random() - 0.5);
+
+    shuffled.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => handleAnswer(opt, btn));
+      answersEl.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(selected, btn){
+    if(answered) return;
+    answered = true;
+
+    const allButtons = answersEl.querySelectorAll('.answer-btn');
+    allButtons.forEach(b => b.disabled = true);
+
+    if(selected === currentAnswer){
+      btn.classList.add('correct');
+      score += 1;
+      scoreEl.textContent = score;
+      feedbackEl.textContent = pickPraise();
+      feedbackEl.style.color = 'var(--grass-deep)';
+      const pct = Math.min(100, (score % 10) * 10);
+      meterFill.style.width = pct + '%';
+      if(score > 0 && score % 5 === 0 && level < 3){
+        level += 1;
+      }
+    } else {
+      btn.classList.add('wrong');
+      allButtons.forEach(b => {
+        if(parseInt(b.textContent, 10) === currentAnswer) b.classList.add('correct');
+      });
+      feedbackEl.textContent = 'Almost! The answer was ' + currentAnswer + '. Try the next one!';
+      feedbackEl.style.color = 'var(--coral-deep)';
+    }
+    nextBtn.classList.add('show');
+  }
+
+  function pickPraise(){
+    const lines = ['Nicely counted! 🌼', 'You got it! 🌟', 'Blooming brilliant!', 'Great counting!', 'Sunny job!'];
+    return lines[randInt(0, lines.length - 1)];
+  }
+
+  nextBtn.addEventListener('click', newQuestion);
+
+  newQuestion();
+</script>
+</body>
+</html>

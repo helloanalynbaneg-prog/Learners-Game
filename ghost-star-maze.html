@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<!--
+  Ghost's Star Maze — a free, open-source maze puzzle game for kids
+  A cute, friendly-spooky maze (no scares, no jump scares) — just a ghost collecting stars.
+  Hard mode: countdown timer, limited moves, and fog of war for extra challenge.
+  License: MIT — do whatever you like with this, just keep the notice.
+  Copyright (c) 2026
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghost's Star Maze</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;700;800&display=swap');
+
+  :root{
+    --lav:#E4DBF7;
+    --lav-deep:#C6B6EA;
+    --purple:#6B4FA0;
+    --purple-deep:#4B3574;
+    --pumpkin:#F4A24C;
+    --pumpkin-deep:#D9822B;
+    --cream:#FFFBF2;
+    --ink:#382B4D;
+    --ink-soft:#6A5D82;
+    --card:#FFFFFF;
+    --wall:#7D6BA6;
+    --path:#F4EFFC;
+    --fog:#3A2F52;
+    --danger:#E24B4A;
+    --danger-deep:#A32D2D;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    font-family:'Nunito', sans-serif;
+    background: linear-gradient(180deg, var(--lav) 0%, var(--lav-deep) 100%);
+    min-height:100vh;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:24px 16px 60px;
+  }
+
+  .wrap{ width:100%; max-width:560px; }
+
+  h1{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:clamp(26px, 6vw, 36px);
+    text-align:center;
+    margin:6px 0 2px;
+    color:var(--purple-deep);
+  }
+
+  .subtitle{
+    text-align:center;
+    font-size:14px;
+    color:var(--ink-soft);
+    margin:0 0 18px;
+    font-weight:700;
+  }
+
+  .card{
+    background:var(--card);
+    border-radius:26px;
+    padding:20px 18px 24px;
+    box-shadow: 0 10px 0 rgba(56,43,77,0.08), 0 4px 20px rgba(56,43,77,0.14);
+  }
+
+  .stat-row{
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:14px;
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+
+  .stat-pill{
+    background: var(--path);
+    padding:6px 12px;
+    border-radius:999px;
+  }
+  .stat-pill.warn{
+    background:#FBE4DE;
+    color: var(--danger-deep);
+  }
+
+  .maze-wrap{
+    display:flex;
+    justify-content:center;
+    margin-bottom:16px;
+    overflow:auto;
+  }
+
+  #mazeGrid{
+    display:grid;
+    gap:1px;
+    background: var(--wall);
+    border-radius:10px;
+    padding:6px;
+  }
+
+  .cell{
+    background: var(--path);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+  }
+  .cell.wall{ background: var(--wall); }
+  .cell.player{ font-size:16px; }
+  .cell.fog{ background: var(--fog); }
+
+  .win-banner{
+    text-align:center;
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:17px;
+    color:var(--purple-deep);
+    min-height:26px;
+    margin-bottom:10px;
+  }
+  .win-banner.lose{ color: var(--danger-deep); }
+
+  .controls{
+    display:grid;
+    grid-template-columns: repeat(3, 56px);
+    grid-template-rows: repeat(2, 56px);
+    justify-content:center;
+    gap:6px;
+    margin: 6px auto 4px;
+  }
+  .ctrl-btn{
+    font-size:22px;
+    border-radius:14px;
+    border: 2px solid var(--lav-deep);
+    background: var(--cream);
+    color:var(--purple-deep);
+    cursor:pointer;
+  }
+  .ctrl-btn:active{ background: var(--lav); }
+  .ctrl-btn:disabled{ opacity:0.5; cursor:default; }
+  #btnUp{ grid-column:2; grid-row:1; }
+  #btnLeft{ grid-column:1; grid-row:2; }
+  #btnDown{ grid-column:2; grid-row:2; }
+  #btnRight{ grid-column:3; grid-row:2; }
+
+  .action-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:16px;
+    flex-wrap:wrap;
+  }
+
+  .primary-btn{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    padding:12px 24px;
+    border-radius:999px;
+    border:none;
+    background: var(--purple);
+    color:white;
+    cursor:pointer;
+    box-shadow: 0 4px 0 var(--purple-deep);
+  }
+  .primary-btn:active{ transform: translateY(3px); box-shadow:none; }
+
+  .ghost-btn{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:11px 20px;
+    border-radius:999px;
+    border: 2px solid var(--lav-deep);
+    background: transparent;
+    color: var(--ink-soft);
+    cursor:pointer;
+  }
+
+  .footer-note{
+    text-align:center;
+    font-size:12px;
+    color:rgba(56,43,77,0.55);
+    margin-top:18px;
+    line-height:1.6;
+  }
+
+  .hint{
+    text-align:center;
+    font-size:12px;
+    color: var(--ink-soft);
+    margin-top:8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Ghost's Star Maze</h1>
+  <p class="subtitle">Guide the ghost to the door before time or moves run out!</p>
+
+  <div class="card">
+    <div class="stat-row">
+      <span class="stat-pill">Level <span id="levelNum">1</span></span>
+      <span class="stat-pill">Stars: <span id="starCount">0</span>/<span id="starTotal">0</span></span>
+      <span class="stat-pill" id="movesPill">Moves left: <span id="movesLeft">0</span></span>
+      <span class="stat-pill" id="timePill">Time: <span id="timeLeft">0</span>s</span>
+    </div>
+
+    <div class="win-banner" id="winBanner"></div>
+
+    <div class="maze-wrap">
+      <div id="mazeGrid"></div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn" id="btnUp" aria-label="Move up">↑</button>
+      <button class="ctrl-btn" id="btnLeft" aria-label="Move left">←</button>
+      <button class="ctrl-btn" id="btnDown" aria-label="Move down">↓</button>
+      <button class="ctrl-btn" id="btnRight" aria-label="Move right">→</button>
+    </div>
+    <p class="hint">Arrow keys or WASD also work. Only the area near the ghost is visible!</p>
+
+    <div class="action-row">
+      <button class="primary-btn" id="nextBtn">Next maze →</button>
+      <button class="ghost-btn" id="resetBtn">Restart maze</button>
+    </div>
+  </div>
+
+  <p class="footer-note">
+    Free and open source — MIT licensed. A friendly maze puzzle — no scares, just stars.<br>
+    Hard mode: beat the clock, limited moves, and fog of war. Feel free to copy, remix, and host this anywhere.
+  </p>
+</div>
+
+<script>
+  const mazeGridEl = document.getElementById('mazeGrid');
+  const levelNumEl = document.getElementById('levelNum');
+  const starCountEl = document.getElementById('starCount');
+  const starTotalEl = document.getElementById('starTotal');
+  const movesLeftEl = document.getElementById('movesLeft');
+  const timeLeftEl = document.getElementById('timeLeft');
+  const movesPill = document.getElementById('movesPill');
+  const timePill = document.getElementById('timePill');
+  const winBanner = document.getElementById('winBanner');
+  const nextBtn = document.getElementById('nextBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const dpadButtons = [
+    document.getElementById('btnUp'),
+    document.getElementById('btnDown'),
+    document.getElementById('btnLeft'),
+    document.getElementById('btnRight')
+  ];
+
+  const FOG_RADIUS = 4;
+
+  let level = 1;
+  let grid = [];
+  let cols = 0, rows = 0;
+  let player = { r: 1, c: 1 };
+  let exitPos = { r: 1, c: 1 };
+  let stars = new Set();
+  let starTotal = 0;
+  let starsCollected = 0;
+  let movesLeft = 0;
+  let timeLeft = 0;
+  let revealed = new Set();
+  let gameActive = false;
+  let timerHandle = null;
+
+  function sizeForLevel(lv){
+    const n = Math.min(5 + lv, 12);
+    return { rows: n, cols: n };
+  }
+
+  function starsForLevel(lv){
+    return Math.min(3 + lv, 8);
+  }
+
+  function shuffle(arr){
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function generateMaze(roomRows, roomCols){
+    const fullRows = 2 * roomRows + 1;
+    const fullCols = 2 * roomCols + 1;
+    const g = Array.from({ length: fullRows }, () => Array(fullCols).fill(1));
+    const visited = Array.from({ length: roomRows }, () => Array(roomCols).fill(false));
+
+    function carve(r, c){
+      visited[r][c] = true;
+      g[2 * r + 1][2 * c + 1] = 0;
+      const dirs = shuffle([[0,1],[0,-1],[1,0],[-1,0]]);
+      for(const [dr, dc] of dirs){
+        const nr = r + dr, nc = c + dc;
+        if(nr >= 0 && nr < roomRows && nc >= 0 && nc < roomCols && !visited[nr][nc]){
+          g[2 * r + 1 + dr][2 * c + 1 + dc] = 0;
+          carve(nr, nc);
+        }
+      }
+    }
+    carve(0, 0);
+    return { grid: g, fullRows, fullCols };
+  }
+
+  function shortestPathLength(startR, startC, targetR, targetC){
+    const fullRows = grid.length, fullCols = grid[0].length;
+    const dist = Array.from({ length: fullRows }, () => Array(fullCols).fill(-1));
+    dist[startR][startC] = 0;
+    const queue = [[startR, startC]];
+    let head = 0;
+    while(head < queue.length){
+      const [r, c] = queue[head++];
+      if(r === targetR && c === targetC) return dist[r][c];
+      const steps = [[-2,0],[2,0],[0,-2],[0,2]];
+      for(const [dr, dc] of steps){
+        const wallR = r + dr / 2, wallC = c + dc / 2;
+        const nr = r + dr, nc = c + dc;
+        if(nr < 0 || nr >= fullRows || nc < 0 || nc >= fullCols) continue;
+        if(grid[wallR][wallC] === 1) continue;
+        if(dist[nr][nc] !== -1) continue;
+        dist[nr][nc] = dist[r][c] + 1;
+        queue.push([nr, nc]);
+      }
+    }
+    return dist[targetR][targetC];
+  }
+
+  function pickStars(count){
+    const candidates = [];
+    for(let r = 0; r < rows; r++){
+      for(let c = 0; c < cols; c++){
+        const gr = 2 * r + 1, gc = 2 * c + 1;
+        const isStart = gr === 1 && gc === 1;
+        const isExit = gr === exitPos.r && gc === exitPos.c;
+        if(!isStart && !isExit) candidates.push({ r: gr, c: gc });
+      }
+    }
+    shuffle(candidates);
+    const chosen = candidates.slice(0, count);
+    stars = new Set(chosen.map(p => p.r + ',' + p.c));
+  }
+
+  function revealAround(r, c){
+    const fullRows = grid.length, fullCols = grid[0].length;
+    for(let dr = -FOG_RADIUS; dr <= FOG_RADIUS; dr++){
+      for(let dc = -FOG_RADIUS; dc <= FOG_RADIUS; dc++){
+        const nr = r + dr, nc = c + dc;
+        if(nr < 0 || nr >= fullRows || nc < 0 || nc >= fullCols) continue;
+        if(Math.abs(dr) + Math.abs(dc) <= FOG_RADIUS){
+          revealed.add(nr + ',' + nc);
+        }
+      }
+    }
+  }
+
+  function buildLevel(){
+    clearInterval(timerHandle);
+    const size = sizeForLevel(level);
+    rows = size.rows;
+    cols = size.cols;
+    const result = generateMaze(rows, cols);
+    grid = result.grid;
+    player = { r: 1, c: 1 };
+    exitPos = { r: result.fullRows - 2, c: result.fullCols - 2 };
+    starTotal = starsForLevel(level);
+    starsCollected = 0;
+    won = false;
+    gameActive = true;
+    revealed = new Set();
+    pickStars(starTotal);
+    revealAround(player.r, player.c);
+
+    const shortest = shortestPathLength(player.r, player.c, exitPos.r, exitPos.c);
+    movesLeft = shortest + Math.max(6, Math.ceil(shortest * 0.5));
+    timeLeft = Math.max(25, shortest * 5);
+
+    levelNumEl.textContent = level;
+    starTotalEl.textContent = starTotal;
+    starCountEl.textContent = 0;
+    movesLeftEl.textContent = movesLeft;
+    timeLeftEl.textContent = timeLeft;
+    movesPill.classList.remove('warn');
+    timePill.classList.remove('warn');
+    winBanner.textContent = '';
+    winBanner.classList.remove('lose');
+    setControlsEnabled(true);
+
+    renderGrid();
+    startTimer();
+  }
+
+  function startTimer(){
+    timerHandle = setInterval(() => {
+      if(!gameActive) return;
+      timeLeft -= 1;
+      timeLeftEl.textContent = timeLeft;
+      if(timeLeft <= 10) timePill.classList.add('warn');
+      if(timeLeft <= 0){
+        endGame(false, "Time's up! The ghost ran out of time.");
+      }
+    }, 1000);
+  }
+
+  function setControlsEnabled(enabled){
+    dpadButtons.forEach(btn => btn.disabled = !enabled);
+  }
+
+  let won = false;
+
+  function renderGrid(){
+    const fullRows = grid.length;
+    const fullCols = grid[0].length;
+    const cellSize = Math.max(16, Math.min(28, Math.floor(480 / fullCols)));
+
+    mazeGridEl.style.gridTemplateColumns = `repeat(${fullCols}, ${cellSize}px)`;
+    mazeGridEl.style.gridTemplateRows = `repeat(${fullRows}, ${cellSize}px)`;
+    mazeGridEl.innerHTML = '';
+
+    for(let r = 0; r < fullRows; r++){
+      for(let c = 0; c < fullCols; c++){
+        const div = document.createElement('div');
+        const key = r + ',' + c;
+        const isRevealed = revealed.has(key);
+        const isWall = grid[r][c] === 1;
+
+        div.style.width = cellSize + 'px';
+        div.style.height = cellSize + 'px';
+
+        if(!isRevealed){
+          div.className = 'cell fog';
+          mazeGridEl.appendChild(div);
+          continue;
+        }
+
+        div.className = 'cell' + (isWall ? ' wall' : '');
+
+        if(!isWall){
+          if(r === player.r && c === player.c){
+            div.textContent = '👻';
+            div.classList.add('player');
+          } else if(r === exitPos.r && c === exitPos.c){
+            div.textContent = '🚪';
+          } else if(stars.has(key)){
+            div.textContent = '⭐';
+          }
+        }
+        mazeGridEl.appendChild(div);
+      }
+    }
+  }
+
+  function endGame(didWin, message){
+    gameActive = false;
+    won = didWin;
+    clearInterval(timerHandle);
+    setControlsEnabled(false);
+    winBanner.textContent = message;
+    winBanner.classList.toggle('lose', !didWin);
+  }
+
+  function tryMove(dr, dc){
+    if(!gameActive) return;
+    const wallR = player.r + dr;
+    const wallC = player.c + dc;
+    const targetR = player.r + 2 * dr;
+    const targetC = player.c + 2 * dc;
+
+    if(targetR < 0 || targetR >= grid.length || targetC < 0 || targetC >= grid[0].length) return;
+    if(grid[wallR][wallC] === 1) return;
+
+    player = { r: targetR, c: targetC };
+    movesLeft -= 1;
+    movesLeftEl.textContent = movesLeft;
+    if(movesLeft <= 5) movesPill.classList.add('warn');
+
+    revealAround(player.r, player.c);
+
+    const key = targetR + ',' + targetC;
+    if(stars.has(key)){
+      stars.delete(key);
+      starsCollected += 1;
+      starCountEl.textContent = starsCollected;
+    }
+
+    if(player.r === exitPos.r && player.c === exitPos.c){
+      renderGrid();
+      const msg = starsCollected === starTotal
+        ? 'You found every star and escaped! Amazing! ✨'
+        : 'You reached the door with moves to spare!';
+      endGame(true, msg);
+      return;
+    }
+
+    if(movesLeft <= 0){
+      renderGrid();
+      endGame(false, 'Out of moves! So close — try again.');
+      return;
+    }
+
+    renderGrid();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+    if(key === 'arrowup' || key === 'w') tryMove(-1, 0);
+    else if(key === 'arrowdown' || key === 's') tryMove(1, 0);
+    else if(key === 'arrowleft' || key === 'a') tryMove(0, -1);
+    else if(key === 'arrowright' || key === 'd') tryMove(0, 1);
+  });
+
+  document.getElementById('btnUp').addEventListener('click', () => tryMove(-1, 0));
+  document.getElementById('btnDown').addEventListener('click', () => tryMove(1, 0));
+  document.getElementById('btnLeft').addEventListener('click', () => tryMove(0, -1));
+  document.getElementById('btnRight').addEventListener('click', () => tryMove(0, 1));
+
+  nextBtn.addEventListener('click', () => {
+    level += 1;
+    buildLevel();
+  });
+
+  resetBtn.addEventListener('click', buildLevel);
+
+  buildLevel();
+</script>
+</body>
+</html>
