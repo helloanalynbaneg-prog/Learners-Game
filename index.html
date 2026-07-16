@@ -21,6 +21,8 @@
     --coral-deep:#D9603F;
     --green:#3B9E4F;
     --green-deep:#276E37;
+    --purple:#8A6FD6;
+    --purple-deep:#5F49A8;
     --cream:#FFFBF2;
     --ink:#3B2A4A;
     --ink-soft:#6B5A7A;
@@ -32,7 +34,7 @@
   body{
     margin:0;
     font-family:'Nunito', sans-serif;
-    background: linear-gradient(180deg, var(--sky) 0%, var(--sky) 40%, var(--grass) 40%, var(--grass) 100%);
+    background: linear-gradient(180deg, var(--sky) 0%, var(--sky) 32%, var(--grass) 32%, var(--grass) 100%);
     min-height:100vh;
     color:var(--ink);
     display:flex;
@@ -40,7 +42,7 @@
     padding:24px 16px 60px;
   }
 
-  .wrap{ width:100%; max-width:680px; }
+  .wrap{ width:100%; max-width:720px; }
 
   .sun{
     width:56px; height:56px; border-radius:50%;
@@ -93,6 +95,8 @@
   }
   .card-bloom::before{ background: repeating-linear-gradient(90deg, var(--coral) 0 18px, var(--sun) 18px 36px, var(--grass) 36px 54px); }
   .card-dash::before{ background: repeating-linear-gradient(90deg, var(--green) 0 18px, #E24B4A 18px 36px); }
+  .card-maze::before{ background: repeating-linear-gradient(90deg, var(--purple) 0 18px, #C6B6EA 18px 36px); }
+  .card-wizard::before{ background: repeating-linear-gradient(90deg, var(--sun) 0 18px, var(--purple) 18px 36px); }
 
   .game-icon{
     font-size:40px;
@@ -154,6 +158,20 @@
       <p class="game-title">Green Light Dash</p>
       <p class="game-desc">Step on green, freeze on red, and race to the finish flag.</p>
       <span class="game-tag">Reflexes &amp; focus</span>
+    </a>
+
+    <a class="game-card card-maze" href="ghost-star-maze.html">
+      <span class="game-icon">👻</span>
+      <p class="game-title">Ghost's Star Maze</p>
+      <p class="game-desc">Explore a fog-covered maze, grab stars, and beat the clock before your moves run out.</p>
+      <span class="game-tag">Puzzle &amp; strategy</span>
+    </a>
+
+    <a class="game-card card-wizard" href="word-wizard.html">
+      <span class="game-icon">🪄</span>
+      <p class="game-title">Word Wizard</p>
+      <p class="game-desc">Guess the word letter by letter before the balloons pop. Pick your category and build a streak.</p>
+      <span class="game-tag">Spelling &amp; vocabulary</span>
     </a>
   </div>
 
